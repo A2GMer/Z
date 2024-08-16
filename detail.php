@@ -1,16 +1,7 @@
 <?php
 date_default_timezone_set("Asia/Tokyo");
-
-//変数の初期化
-$current_date = null;
-$message = array();
-$message_array = array();
-$success_message = null;
-$error_message = array();
-$escaped = array();
-$pdo = null;
-$statment = null;
-$res = null;
+$data= explode(",",$_SERVER['QUERY_STRING']);
+$id = $data[0];
 
 //データベース接続
 try {
@@ -40,8 +31,6 @@ if (!empty($_POST["submitButton"])) {
 
     //エラーメッセージが何もないときだけデータ保存できる
     if (empty($error_message)) {
-        var_dump($_POST);
-
         //ここからDB追加のときに追加
         $current_date = date("Y-m-d H:i:s");
 
@@ -51,12 +40,13 @@ if (!empty($_POST["submitButton"])) {
         try {
 
             //SQL作成
-            $statment = $pdo->prepare("INSERT INTO `z-feed` (username, comment, post_date) VALUES (:username, :comment, :current_date)");
+            $statment = $pdo->prepare("INSERT INTO `z-comments` (username, comment, post_date, feed_id) VALUES (:username, :comment, :current_date, :feed_id)");
 
             //値をセット
             $statment->bindParam(':username', $escaped["username"], PDO::PARAM_STR);
             $statment->bindParam(':comment', $escaped["comment"], PDO::PARAM_STR);
             $statment->bindParam(':current_date', $current_date, PDO::PARAM_STR);
+            $statment->bindParam(':feed_id', $id, PDO::PARAM_STR);
 
             //SQLクエリの実行
             $res = $statment->execute();
@@ -77,15 +67,18 @@ if (!empty($_POST["submitButton"])) {
         $statment = null;
 
         // POST処理の最後にリダイレクト処理
-        header("Location:./index.php");
+        header("Location:./detail.php?".$id);
         exit();
     }
 }
 
 
 //DBからコメントデータを取得する
-$sql = "SELECT id, username, comment, post_date FROM `z-feed` ORDER BY post_date ASC";
-$message_array = $pdo->query($sql);
+$sql1 = "SELECT username, comment, post_date FROM `z-comments` Where feed_id=$id";
+$message_array1 = $pdo->query($sql1);
+
+$sql2 = "SELECT username, comment, post_date FROM `z-feed` Where id=$id";
+$message_array2 = $pdo->query($sql2);
 
 
 //DB接続を閉じる
@@ -102,51 +95,60 @@ $pdo = null;
     <title>Z</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-    <h1 class="title">Z</h1>
-    <hr>
+    <h1 class="title"><a class="non-hyperlink" href="index.php">Z</a></h1>
     <div class="boardWrapper">
-        <!-- メッセージ送信成功時 -->
-        <?php if (!empty($success_message)) : ?>
-            <p class="success_message"><?php echo $success_message; ?></p>
-        <?php endif; ?>
-
-        <!-- バリデーションチェック時 -->
-        <?php if (!empty($error_message)) : ?>
-            <?php foreach ($error_message as $value) : ?>
-                <div class="error_message">※<?php echo $value; ?></div>
-            <?php endforeach; ?>
-        <?php endif; ?>
         <section>
-            <?php if (!empty($message_array)) : ?>
-                <?php foreach ($message_array as $value) : ?>
+            <?php if (!empty($message_array2)) : ?>
+                <?php foreach ($message_array2 as $value) : ?>
                     <article>
-                        <a class="non-hyperlink" href="detail.php?<?php echo $value['id'] ?>">
-                            <div class="wrapper">
-                                <div class="nameArea">
-                                    <span name="username">名前：</span>
-                                    <p class="username"><?php echo $value['username'] ?></p>
-                                    <time>：<?php echo date('Y/m/d H:i', strtotime($value['post_date'])); ?></time>
-                                </div>
-                                <p class="comment"><?php echo $value['comment']; ?></p>
+                        <div class="wrapper">
+                            <div class="nameArea">
+                                <span>名前：</span>
+                                <p class="username"><?php echo $value['username'] ?></p>
+                                <time>：<?php echo date('Y/m/d H:i', strtotime($value['post_date'])); ?></time>
                             </div>
-                        </a>
+                            <p class="comment"><?php echo $value['comment']; ?></p>
+                        </div>
                     </article>
                     <hr>
                 <?php endforeach; ?>
             <?php endif; ?>
-        <form method="POST" action="" class="formWrapper">
-            <div>
-                <input type="submit" value="書き込む" name="submitButton">
-                <label>名前：</label>
-                <input type="text" name="username">
-            </div>
-            <div>
-                <textarea name="comment" class="commentTextArea"></textarea>
-            </div>
-        </form>
         </section>
+        <section>
+            <?php if (!empty($message_array1)) : ?>
+                <?php foreach ($message_array1 as $value) : ?>
+                    <article>
+                        <div class="wrapper">
+                            <div class="nameArea">
+                                <span>名前：</span>
+                                <p class="username"><?php echo $value['username'] ?></p>
+                                <time>：<?php echo date('Y/m/d H:i', strtotime($value['post_date'])); ?></time>
+                            </div>
+                            <p class="comment"><?php echo $value['comment']; ?></p>
+                        </div>
+                    </article>
+                    <hr>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </section>
+    <form method="POST" action="" class="formWrapper">
+        <div>
+            <!-- バリデーションチェック時 -->
+            <?php if (!empty($error_message)) : ?>
+            <?php foreach ($error_message as $value) : ?>
+            <div class="error_message">※<?php echo $value; ?></div>
+            <?php endforeach; ?>
+            <?php endif; ?>
+            <input type="submit" value="書き込む" name="submitButton">
+            <label>名前：</label>
+            <input type="text" name="username">
+        </div>
+        <div>
+            <textarea name="comment" class="commentTextArea"></textarea>
+        </div>
+    </form>
     </div>
 </body>
+
 </html>
