@@ -1,70 +1,61 @@
 <?php
 date_default_timezone_set("Asia/Tokyo");
 
-//変数の初期化
+// Initialize variables
 $current_date = null;
-$message = array();
-$message_array = array();
+$message = [];
+$message_array = [];
 $success_message = null;
-$error_message = array();
-$escaped = array();
+$error_message = [];
+$escaped = [];
 $pdo = null;
-$statment = null;
+$statement = null;
 $res = null;
 
-//データベース接続
+// Database connection
 try {
     $pdo = new PDO('mysql:charset=UTF8;dbname=z;host=localhost', 'root', 'root');
 } catch (PDOException $e) {
-    //接続エラーのときエラー内容を取得する
     $error_message[] = $e->getMessage();
 }
 
-//送信して受け取ったデータは$_POSTの中に自動的に入る。
-//投稿データがあるときだけログを表示する。
+// Handle form submission
 if (!empty($_POST["submitButton"])) {
-
-    //表示名の入力チェック
+    // Validate username
     if (empty($_POST["username"])) {
         $error_message[] = "お名前を入力してください。";
     } else {
         $escaped['username'] = htmlspecialchars($_POST["username"], ENT_QUOTES, "UTF-8");
     }
 
-    //コメントの入力チェック
+    // Validate comment
     if (empty($_POST["comment"])) {
         $error_message[] = "コメントを入力してください。";
     } else {
         $escaped['comment'] = htmlspecialchars($_POST["comment"], ENT_QUOTES, "UTF-8");
     }
 
-    //エラーメッセージが何もないときだけデータ保存できる
+    // If no validation errors, save data
     if (empty($error_message)) {
-        var_dump($_POST);
-
-        //ここからDB追加のときに追加
         $current_date = date("Y-m-d H:i:s");
 
-        //トランザクション開始
         $pdo->beginTransaction();
-
         try {
+            // Prepare SQL statement
+            $statement = $pdo->prepare("INSERT INTO `z-feed` (username, comment, post_date) VALUES (:username, :comment, :current_date)");
 
-            //SQL作成
-            $statment = $pdo->prepare("INSERT INTO `z-feed` (username, comment, post_date) VALUES (:username, :comment, :current_date)");
+            // Bind parameters
+            $statement->bindParam(':username', $escaped["username"], PDO::PARAM_STR);
+            $statement->bindParam(':comment', $escaped["comment"], PDO::PARAM_STR);
+            $statement->bindParam(':current_date', $current_date, PDO::PARAM_STR);
 
-            //値をセット
-            $statment->bindParam(':username', $escaped["username"], PDO::PARAM_STR);
-            $statment->bindParam(':comment', $escaped["comment"], PDO::PARAM_STR);
-            $statment->bindParam(':current_date', $current_date, PDO::PARAM_STR);
+            // Execute SQL query
+            $res = $statement->execute();
 
-            //SQLクエリの実行
-            $res = $statment->execute();
-
-            //ここまでエラーなくできたらコミット
-            $res = $pdo->commit();
+            // Commit transaction if successful
+            $pdo->commit();
         } catch (Exception $e) {
-            //エラーが発生したときはロールバック(処理取り消し)
+            // Rollback on error
             $pdo->rollBack();
         }
 
@@ -74,21 +65,19 @@ if (!empty($_POST["submitButton"])) {
             $error_message[] = "書き込みに失敗しました。";
         }
 
-        $statment = null;
+        $statement = null;
 
-        // POST処理の最後にリダイレクト処理
+        // Redirect after POST processing
         header("Location:./index.php");
         exit();
     }
 }
 
-
-//DBからコメントデータを取得する
+// Fetch comment data from database
 $sql = "SELECT * FROM `z-feed` ORDER BY upvote DESC";
-$message_array = $pdo->query($sql);
+$message_array = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 
-
-//DB接続を閉じる
+// Close database connection
 $pdo = null;
 ?>
 
@@ -107,52 +96,56 @@ $pdo = null;
     <h1 class="title">Z</h1>
     <hr>
     <div class="boardWrapper">
-        <!-- メッセージ送信成功時 -->
+        <!-- Success message -->
         <?php if (!empty($success_message)) : ?>
             <p class="success_message"><?php echo $success_message; ?></p>
         <?php endif; ?>
 
-        <!-- バリデーションチェック時 -->
+        <!-- Validation errors -->
         <?php if (!empty($error_message)) : ?>
             <?php foreach ($error_message as $value) : ?>
                 <div class="error_message">※<?php echo $value; ?></div>
             <?php endforeach; ?>
         <?php endif; ?>
+        
         <section>
             <?php if (!empty($message_array)) : ?>
                 <?php foreach ($message_array as $value) : ?>
                     <article class="float3">
-                        <a class="non-hyperlink" href="detail.php?<?php echo $value['id'] ?>">
+                        <a class="non-hyperlink" href="detail.php?<?php echo $value['id']; ?>">
                             <div class="wrapper">
                                 <div class="nameArea">
-                                    <span name="username">名前：</span>
-                                    <p class="username"><?php echo $value['username'] ?></p>
+                                    <span>名前：</span>
+                                    <p class="username"><?php echo htmlspecialchars($value['username'], ENT_QUOTES, 'UTF-8'); ?></p>
                                     <time>：<?php echo date('Y/m/d H:i', strtotime($value['post_date'])); ?></time>
                                 </div>
-                                <p class="comment"><?php echo $value['comment']; ?></p>
+                                <p class="comment"><?php echo htmlspecialchars($value['comment'], ENT_QUOTES, 'UTF-8'); ?></p>
                             </div>
                         </a>
-                        <form mthod="POST" action=""></form>
-                        <section>
-                        <button name="upVoteButton">↑</button>
-                        <?php echo $value['upvote'] ?>
-                        <button name="downVoteButton">↓</button>
-                        </section>
+                        <form method="POST" action="">
+                            <section>
+                                <button type="submit" name="upVoteButton">↑</button>
+                                <?php echo $value['upvote']; ?>
+                                <button type="submit" name="downVoteButton">↓</button>
+                            </section>
+                        </form>
                     </article>
                     <hr>
                 <?php endforeach; ?>
             <?php endif; ?>
-        <form method="POST" action="" class="formWrapper">
-            <div>
-                <input type="submit" value="書き込む" name="submitButton">
-                <label>名前：</label>
-                <input type="text" name="username">
-            </div>
-            <div>
-                <textarea name="comment" class="commentTextArea"></textarea>
-            </div>
-        </form>
+            
+            <form method="POST" action="" class="formWrapper">
+                <div>
+                    <input type="submit" value="書き込む" name="submitButton">
+                    <label>名前：</label>
+                    <input type="text" name="username">
+                </div>
+                <div>
+                    <textarea name="comment" class="commentTextArea"></textarea>
+                </div>
+            </form>
         </section>
     </div>
 </body>
+
 </html>
