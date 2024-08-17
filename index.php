@@ -2,82 +2,77 @@
 date_default_timezone_set("Asia/Tokyo");
 
 // Initialize variables
-$current_date = null;
-$message = [];
-$message_array = [];
 $success_message = null;
 $error_message = [];
-$escaped = [];
 $pdo = null;
-$statement = null;
-$res = null;
 
-// Database connection
-try {
-    $pdo = new PDO('mysql:charset=UTF8;dbname=z;host=localhost', 'root', 'root');
-} catch (PDOException $e) {
-    $error_message[] = $e->getMessage();
+function dbConnect() {
+    try {
+        return new PDO('mysql:charset=UTF8;dbname=z;host=localhost', 'root', 'root');
+    } catch (PDOException $e) {
+        global $error_message;
+        $error_message[] = $e->getMessage();
+        return null;
+    }
 }
 
-// Handle form submission
+function validateInput($input_name, $error_message, &$escaped) {
+    if (empty($_POST[$input_name])) {
+        $error_message[] = $input_name === "username" ? "お名前を入力してください。" : "コメントを入力してください。";
+    } else {
+        $escaped[$input_name] = htmlspecialchars($_POST[$input_name], ENT_QUOTES, "UTF-8");
+    }
+}
+
+function insertComment($pdo, $escaped) {
+    $current_date = date("Y-m-d H:i:s");
+    $pdo->beginTransaction();
+    try {
+        $statement = $pdo->prepare("INSERT INTO `z-feeds` (username, comment, post_date) VALUES (:username, :comment, :current_date)");
+        $statement->bindParam(':username', $escaped["username"], PDO::PARAM_STR);
+        $statement->bindParam(':comment', $escaped["comment"], PDO::PARAM_STR);
+        $statement->bindParam(':current_date', $current_date, PDO::PARAM_STR);
+        $res = $statement->execute();
+        $pdo->commit();
+        return $res ? "コメントを書き込みました。" : "書き込みに失敗しました。";
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        return "書き込みに失敗しました。";
+    }
+}
+
+function fetchMessages($pdo) {
+    $sql = "SELECT * FROM `z-feeds` ORDER BY upvote DESC";
+    return $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function fetchCommentCount($pdo, $feed_id) {
+    $sql = "SELECT COUNT(*) AS comment_count FROM `z-comments` WHERE feed_id = :feed_id";
+    $statement = $pdo->prepare($sql);
+    $statement->bindParam(':feed_id', $feed_id, PDO::PARAM_INT);
+    $statement->execute();
+    return $statement->fetch(PDO::FETCH_ASSOC)['comment_count'];
+}
+
+$pdo = dbConnect();
+
 if (!empty($_POST["submitButton"])) {
-    // Validate username
-    if (empty($_POST["username"])) {
-        $error_message[] = "お名前を入力してください。";
-    } else {
-        $escaped['username'] = htmlspecialchars($_POST["username"], ENT_QUOTES, "UTF-8");
-    }
+    validateInput("username", $error_message, $escaped);
+    validateInput("comment", $error_message, $escaped);
 
-    // Validate comment
-    if (empty($_POST["comment"])) {
-        $error_message[] = "コメントを入力してください。";
-    } else {
-        $escaped['comment'] = htmlspecialchars($_POST["comment"], ENT_QUOTES, "UTF-8");
-    }
-
-    // If no validation errors, save data
     if (empty($error_message)) {
-        $current_date = date("Y-m-d H:i:s");
-
-        $pdo->beginTransaction();
-        try {
-            // Prepare SQL statement
-            $statement = $pdo->prepare("INSERT INTO `z-feeds` (username, comment, post_date) VALUES (:username, :comment, :current_date)");
-
-            // Bind parameters
-            $statement->bindParam(':username', $escaped["username"], PDO::PARAM_STR);
-            $statement->bindParam(':comment', $escaped["comment"], PDO::PARAM_STR);
-            $statement->bindParam(':current_date', $current_date, PDO::PARAM_STR);
-
-            // Execute SQL query
-            $res = $statement->execute();
-
-            // Commit transaction if successful
-            $pdo->commit();
-        } catch (Exception $e) {
-            // Rollback on error
-            $pdo->rollBack();
-        }
-
-        if ($res) {
-            $success_message = "コメントを書き込みました。";
+        $success_message = insertComment($pdo, $escaped);
+        if ($success_message === "コメントを書き込みました。") {
+            header("Location: ./index.php");
+            exit();
         } else {
-            $error_message[] = "書き込みに失敗しました。";
+            $error_message[] = $success_message;
         }
-
-        $statement = null;
-
-        // Redirect after POST processing
-        header("Location:./index.php");
-        exit();
     }
 }
 
-// Fetch comment data from database
-$sql = "SELECT * FROM `z-feeds` ORDER BY upvote DESC";
-$message_array = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+$message_array = fetchMessages($pdo);
 
-// Close database connection
 $pdo = null;
 ?>
 
@@ -98,13 +93,13 @@ $pdo = null;
     <div class="boardWrapper">
         <!-- Success message -->
         <?php if (!empty($success_message)) : ?>
-            <p class="success_message"><?php echo $success_message; ?></p>
+            <p class="success_message"><?php echo htmlspecialchars($success_message, ENT_QUOTES, 'UTF-8'); ?></p>
         <?php endif; ?>
 
         <!-- Validation errors -->
         <?php if (!empty($error_message)) : ?>
             <?php foreach ($error_message as $value) : ?>
-                <div class="error_message">※<?php echo $value; ?></div>
+                <div class="error_message">※<?php echo htmlspecialchars($value, ENT_QUOTES, 'UTF-8'); ?></div>
             <?php endforeach; ?>
         <?php endif; ?>
         
@@ -112,7 +107,7 @@ $pdo = null;
             <?php if (!empty($message_array)) : ?>
                 <?php foreach ($message_array as $value) : ?>
                     <article class="float3">
-                        <a class="non-hyperlink" href="detail.php?<?php echo $value['id']; ?>">
+                        <a class="non-hyperlink" href="detail.php?<?php echo htmlspecialchars($value['id'], ENT_QUOTES, 'UTF-8'); ?>">
                             <div class="wrapper">
                                 <div class="nameArea">
                                     <span>名前：</span>
@@ -125,18 +120,13 @@ $pdo = null;
                         <form method="POST" action="">
                             <section>
                                 <button type="submit" name="upVoteButton">↑</button>
-                                <?php echo $value['upvote']; ?>
+                                <?php echo htmlspecialchars($value['upvote'], ENT_QUOTES, 'UTF-8'); ?>
                                 <button type="submit" name="downVoteButton">↓</button>
                                 コメント数：<?php 
-                                    $pdo = new PDO('mysql:charset=UTF8;dbname=z;host=localhost', 'root', 'root');
-                                    $feed_id = $value['id'];
-                                    $sql = "SELECT COUNT(*) AS comment_count FROM `z-comments` WHERE feed_id = :feed_id";
-                                    $statement = $pdo->prepare($sql);
-                                    $statement->bindParam(':feed_id', $feed_id, PDO::PARAM_INT);
-                                    $statement->execute();
-                                    $result = $statement->fetch(PDO::FETCH_ASSOC);
-                                echo $result['comment_count'];
-                             ?>
+                                    $pdo = dbConnect();
+                                    echo fetchCommentCount($pdo, $value['id']);
+                                    $pdo = null;
+                                ?>
                             </section>
                         </form>
                     </article>
