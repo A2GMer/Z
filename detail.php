@@ -78,7 +78,7 @@ if (!empty($_POST["submitButton"])) {
     $error_messages = handlePost($pdo, $id);
 }
 
-$feed_message = fetchMessages($pdo, $id, 'z-feed', 'id');
+$feed_message = fetchMessages($pdo, $id, 'z-feeds', 'id');
 $comments = fetchMessages($pdo, $id, 'z-comments', 'feed_id');
 
 $pdo = null;

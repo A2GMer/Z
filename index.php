@@ -42,7 +42,7 @@ if (!empty($_POST["submitButton"])) {
         $pdo->beginTransaction();
         try {
             // Prepare SQL statement
-            $statement = $pdo->prepare("INSERT INTO `z-feed` (username, comment, post_date) VALUES (:username, :comment, :current_date)");
+            $statement = $pdo->prepare("INSERT INTO `z-feeds` (username, comment, post_date) VALUES (:username, :comment, :current_date)");
 
             // Bind parameters
             $statement->bindParam(':username', $escaped["username"], PDO::PARAM_STR);
@@ -74,7 +74,7 @@ if (!empty($_POST["submitButton"])) {
 }
 
 // Fetch comment data from database
-$sql = "SELECT * FROM `z-feed` ORDER BY upvote DESC";
+$sql = "SELECT * FROM `z-feeds` ORDER BY upvote DESC";
 $message_array = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 
 // Close database connection
