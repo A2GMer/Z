@@ -116,19 +116,19 @@ $pdo = null;
                                 </div>
                                 <p class="comment"><?php echo htmlspecialchars($value['comment'], ENT_QUOTES, 'UTF-8'); ?></p>
                             </div>
+                            <form method="POST" action="">
+                                <section>
+                                    <button type="submit" name="upVoteButton">↑</button>
+                                    <?php echo htmlspecialchars($value['upvote'], ENT_QUOTES, 'UTF-8'); ?>
+                                    <button type="submit" name="downVoteButton">↓</button>
+                                    コメント数：<?php 
+                                        $pdo = dbConnect();
+                                        echo fetchCommentCount($pdo, $value['id']);
+                                        $pdo = null;
+                                    ?>
+                                </section>
+                            </form>
                         </a>
-                        <form method="POST" action="">
-                            <section>
-                                <button type="submit" name="upVoteButton">↑</button>
-                                <?php echo htmlspecialchars($value['upvote'], ENT_QUOTES, 'UTF-8'); ?>
-                                <button type="submit" name="downVoteButton">↓</button>
-                                コメント数：<?php 
-                                    $pdo = dbConnect();
-                                    echo fetchCommentCount($pdo, $value['id']);
-                                    $pdo = null;
-                                ?>
-                            </section>
-                        </form>
                     </article>
                     <hr>
                 <?php endforeach; ?>
