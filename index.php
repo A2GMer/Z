@@ -127,6 +127,16 @@ $pdo = null;
                                 <button type="submit" name="upVoteButton">↑</button>
                                 <?php echo $value['upvote']; ?>
                                 <button type="submit" name="downVoteButton">↓</button>
+                                コメント数：<?php 
+                                    $pdo = new PDO('mysql:charset=UTF8;dbname=z;host=localhost', 'root', 'root');
+                                    $feed_id = $value['id'];
+                                    $sql = "SELECT COUNT(*) AS comment_count FROM `z-comments` WHERE feed_id = :feed_id";
+                                    $statement = $pdo->prepare($sql);
+                                    $statement->bindParam(':feed_id', $feed_id, PDO::PARAM_INT);
+                                    $statement->execute();
+                                    $result = $statement->fetch(PDO::FETCH_ASSOC);
+                                echo $result['comment_count'];
+                             ?>
                             </section>
                         </form>
                     </article>
