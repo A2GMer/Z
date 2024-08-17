@@ -84,7 +84,7 @@ if (!empty($_POST["submitButton"])) {
 
 
 //DBからコメントデータを取得する
-$sql = "SELECT id, username, comment, post_date FROM `z-feed` ORDER BY post_date ASC";
+$sql = "SELECT * FROM `z-feed` ORDER BY upvote DESC";
 $message_array = $pdo->query($sql);
 
 
@@ -121,7 +121,7 @@ $pdo = null;
         <section>
             <?php if (!empty($message_array)) : ?>
                 <?php foreach ($message_array as $value) : ?>
-                    <article>
+                    <article class="float3">
                         <a class="non-hyperlink" href="detail.php?<?php echo $value['id'] ?>">
                             <div class="wrapper">
                                 <div class="nameArea">
@@ -132,6 +132,12 @@ $pdo = null;
                                 <p class="comment"><?php echo $value['comment']; ?></p>
                             </div>
                         </a>
+                        <form mthod="POST" action=""></form>
+                        <section>
+                        <button name="upVoteButton">↑</button>
+                        <?php echo $value['upvote'] ?>
+                        <button name="downVoteButton">↓</button>
+                        </section>
                     </article>
                     <hr>
                 <?php endforeach; ?>
