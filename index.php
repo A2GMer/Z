@@ -5,6 +5,8 @@ date_default_timezone_set("Asia/Tokyo");
 $success_message = null;
 $error_message = [];
 $pdo = null;
+$escaped = [];
+
 
 function dbConnect() {
     try {
@@ -41,6 +43,27 @@ function insertComment($pdo, $escaped) {
     }
 }
 
+function updateFeeds($pdo, $escaped, &$error_message, $mode) {
+    $pdo->beginTransaction();
+    try {
+        if ($mode == "1"){
+            $statement = $pdo->prepare("UPDATE `z-feeds` SET `upvote` = upvote + 1 WHERE id = :id");
+        }else{
+            $statement = $pdo->prepare("UPDATE `z-feeds` SET `downvote` = downvote + 1 WHERE id = :id");
+        }
+        
+        
+        $statement->bindParam(':id', $escaped["id"], PDO::PARAM_STR);
+        $res = $statement->execute();
+        $pdo->commit();
+        return $res ? "投票を更新しました。" : "投票の更新に失敗しました。";
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        $error_message[] = $e->getMessage();
+        return "投票の更新に失敗しました。";
+    }
+}
+
 function fetchMessages($pdo) {
     $sql = "SELECT * FROM `z-feeds` ORDER BY upvote DESC";
     return $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
@@ -68,6 +91,28 @@ if (!empty($_POST["submitButton"])) {
         } else {
             $error_message[] = $success_message;
         }
+    }
+}
+
+if (!empty($_POST["upVoteButton"])) {
+    $escaped["id"] = htmlspecialchars($_POST["id"], ENT_QUOTES, "UTF-8");
+    $success_message = updateFeeds($pdo, $escaped, $error_message, "1");
+    if ($success_message === "投票を更新しました。") {
+        header("Location: ./index.php");
+        exit();
+    } else {
+        $error_message[] = $success_message;
+    }
+}
+
+if (!empty($_POST["downVoteButton"])) {
+    $escaped["id"] = htmlspecialchars($_POST["id"], ENT_QUOTES, "UTF-8");
+    $success_message = updateFeeds($pdo, $escaped, $error_message, "2");
+    if ($success_message === "投票を更新しました。") {
+        header("Location: ./index.php");
+        exit();
+    } else {
+        $error_message[] = $success_message;
     }
 }
 
@@ -118,9 +163,10 @@ $pdo = null;
                             </div>
                             <form method="POST" action="">
                                 <section>
-                                    <button type="submit" name="upVoteButton">↑</button>
+                                    <input type="hidden" name="id" value="<?php echo htmlspecialchars($value['id'], ENT_QUOTES, 'UTF-8'); ?>">
+                                    <input type="submit" name="upVoteButton" value="↑"></button>
                                     <?php echo htmlspecialchars($value['upvote'], ENT_QUOTES, 'UTF-8'); ?>
-                                    <button type="submit" name="downVoteButton">↓</button>
+                                    <input type="submit" name="downVoteButton" value="↓"></button>
                                     コメント数：<?php 
                                         $pdo = dbConnect();
                                         echo fetchCommentCount($pdo, $value['id']);
