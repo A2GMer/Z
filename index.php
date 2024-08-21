@@ -154,6 +154,63 @@ $pdo = null;
 </head>
 
 <body>
+    <script>
+        function fetchAndDisplayRecords() {
+            fetch('process.php', {
+                method: 'POST',
+            })
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('articles-container');
+                container.innerHTML = '';
+
+                if (data.error) {
+                    container.innerHTML = '<p>Error: ' + data.error + '</p>';
+                    return;
+                }
+
+                data.forEach(record => {
+                    const article = document.createElement('article');
+
+                    var commentsCnt = 0;
+
+                    article.innerHTML = `
+                        <article class="float3">
+                            <a class="non-hyperlink" href="detail.php?${record.id}">
+                                <div class="wrapper">
+                                    <div class="nameArea">
+                                        <span>名前：</span>
+                                        <p class="username">${record.username}</p>
+                                        <time>：${record.post_date}</time>
+                                    </div>
+                                    <p class="comment">${record.comment}</p>
+                                </div>
+                                <form method="POST" action="">
+                                    <section>
+                                        <input type="hidden" name="id" value="${record.id}">
+                                        <input type="submit" name="upVoteButton" value="↑">
+                                        ${record.upvote}
+                                        <input type="submit" name="downVoteButton" value="↓">
+                                        コメント数：
+                                        <?php 
+                                        //     $pdo = dbConnect();
+                                        //     echo fetchCommentCount($pdo, ${record.id});
+                                        //     $pdo = null;
+                                        ?>
+                                    </section>
+                                </form>
+                            </a>
+                        </article>
+                        <hr>
+                    `;
+                    container.appendChild(article);
+                });
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchAndDisplayRecords);
+    </script>
     <h1 class="title">Z</h1>
     <hr>
     <div class="boardWrapper">
@@ -170,37 +227,7 @@ $pdo = null;
         <?php endif; ?>
         
         <section>
-            <?php if (!empty($message_array)) : ?>
-                <?php foreach ($message_array as $value) : ?>
-                    <article class="float3">
-                        <a class="non-hyperlink" href="detail.php?<?php echo htmlspecialchars($value['id'], ENT_QUOTES, 'UTF-8'); ?>">
-                            <div class="wrapper">
-                                <div class="nameArea">
-                                    <span>名前：</span>
-                                    <p class="username"><?php echo htmlspecialchars($value['username'], ENT_QUOTES, 'UTF-8'); ?></p>
-                                    <time>：<?php echo date('Y/m/d H:i', strtotime($value['post_date'])); ?></time>
-                                </div>
-                                <p class="comment"><?php echo htmlspecialchars($value['comment'], ENT_QUOTES, 'UTF-8'); ?></p>
-                            </div>
-                            <form method="POST" action="">
-                                <section>
-                                    <input type="hidden" name="id" value="<?php echo htmlspecialchars($value['id'], ENT_QUOTES, 'UTF-8'); ?>">
-                                    <input type="submit" name="upVoteButton" value="↑">
-                                    <?php echo htmlspecialchars($value['upvote'], ENT_QUOTES, 'UTF-8'); ?>
-                                    <input type="submit" name="downVoteButton" value="↓">
-                                    コメント数：<?php 
-                                        $pdo = dbConnect();
-                                        echo fetchCommentCount($pdo, $value['id']);
-                                        $pdo = null;
-                                    ?>
-                                </section>
-                            </form>
-                        </a>
-                    </article>
-                    <hr>
-                <?php endforeach; ?>
-            <?php endif; ?>
-            
+            <div id="articles-container"></div>
             <form method="POST" action="" class="formWrapper">
                 <div>
                     <input type="submit" value="書き込む" name="submitButton">
