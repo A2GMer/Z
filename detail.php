@@ -1,9 +1,10 @@
 <?php
 date_default_timezone_set("Asia/Tokyo");
+require_once('config.php');
 
 function dbConnect() {
     try {
-        return new PDO('mysql:charset=UTF8;dbname=z;host=localhost', 'root', 'root');
+        return new PDO(DSN, DB_USER, DB_PASS);
     } catch (PDOException $e) {
         return null;
     }

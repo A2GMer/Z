@@ -1,5 +1,6 @@
 <?php
 date_default_timezone_set("Asia/Tokyo");
+require_once('config.php');
 
 // 初期化
 $success_message = null;
@@ -9,12 +10,8 @@ $escaped = [];
 
 // データベース接続関数
 function dbConnect() {
-    $dsn = 'mysql:charset=UTF8;dbname=z;host=localhost';
-    $username = 'root';
-    $password = 'root';
-    
     try {
-        return new PDO($dsn, $username, $password);
+        return new PDO(DSN, DB_USER, DB_PASS);
     } catch (PDOException $e) {
         global $error_message;
         $error_message[] = $e->getMessage();
