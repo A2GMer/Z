@@ -76,17 +76,29 @@ function updateFeeds($pdo, $escaped, $mode) {
 
 // 投稿メッセージ取得関数
 function fetchMessages($pdo) {
-    $sql = "SELECT * FROM `z-feeds` ORDER BY upvote DESC";
-    return $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+    try{
+        $sql = "SELECT * FROM `z-feeds` ORDER BY `upvote` DESC";
+        $stmt = $pdo->query($sql);
+        if ($stmt !== FALSE) {
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+    }catch(Exception $e){
+        echo $e->getMessage();
+    }
+    return $result;
 }
 
 // コメント数取得関数
 function fetchCommentCount($pdo, $feed_id) {
-    $sql = "SELECT COUNT(*) AS comment_count FROM `z-comments` WHERE feed_id = :feed_id";
-    $statement = $pdo->prepare($sql);
-    $statement->bindParam(':feed_id', $feed_id, PDO::PARAM_INT);
-    $statement->execute();
-    return $statement->fetch(PDO::FETCH_ASSOC)['comment_count'];
+    try {
+        $sql = "SELECT COUNT(*) AS comment_count FROM `z-comments` WHERE feed_id = :feed_id";
+        $statement = $pdo->prepare($sql);
+        $statement->bindParam(':feed_id', $feed_id, PDO::PARAM_INT);
+        $statement->execute();
+        return $statement->fetch(PDO::FETCH_ASSOC)['comment_count'];
+    } catch (Exception $e) {
+        echo 'Connection failed: ' . $e->getMessage();
+    }
 }
 
 // PDO接続
