@@ -191,28 +191,13 @@ $pdo = null;
                                 </div>
                                 <p class="comment"><?php echo htmlspecialchars($value['comment'], ENT_QUOTES, 'UTF-8'); ?></p>
                             </div>
-                            <!-- <form method="POST" action="">
-                                <section>
-                                    <input type="hidden" name="id" value="<?php echo htmlspecialchars($value['id'], ENT_QUOTES, 'UTF-8'); ?>">
-                                    <input type="submit" name="upVoteButton" value="↑">
-                                    <?php echo htmlspecialchars($value['upvote'], ENT_QUOTES, 'UTF-8'); ?>
-                                    <input type="submit" name="downVoteButton" value="↓">
-                                    コメント数：<?php 
-                                        $pdo = dbConnect();
-                                        echo fetchCommentCount($pdo, $value['id']);
-                                        $pdo = null;
-                                    ?>
-                                </section>
-                            </form> -->
                         </a>
                         <button class="votesButton" id="ajaxButton" data-id="<?php echo $value['id'] ?>">👍</button><span id="upVotesCounts?<?php echo $value['id'] ?>"><?php echo $value['upvote'] ?></span>
                         <button >👎</button>
-                        <script src="scripts.js"></script>
                     </article>
                     <hr>
                 <?php endforeach; ?>
             <?php endif; ?>
-            
             <form method="POST" action="" class="formWrapper">
                 <div>
                     <input type="submit" value="書き込む" name="submitButton">
@@ -225,6 +210,7 @@ $pdo = null;
             </form>
         </section>
     </div>
+    <script src="scripts.js"></script>
 </body>
 
 </html>
