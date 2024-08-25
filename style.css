@@ -66,3 +66,12 @@ section .comment {
 .float3:hover {
 	background-color: #F8F4F4;
 }
+
+.header__flex {
+  display: flex;
+  height:60px;
+  align-items: center;
+}
+.header__flex nav {
+  margin-left: auto;
+}

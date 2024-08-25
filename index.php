@@ -1,4 +1,7 @@
 <?php
+
+session_start();
+
 date_default_timezone_set("Asia/Tokyo");
 require_once('config.php');
 
@@ -106,16 +109,20 @@ $pdo = dbConnect();
 
 // コメントの投稿処理
 if (isset($_POST["submitButton"])) {
-    validateInput("username", $escaped);
-    validateInput("comment", $escaped);
+    if (!isset($_SESSION['id'])) {
+        $error_message[] = "ログインしてください。";
+    } else {
+        validateInput("username", $escaped);
+        validateInput("comment", $escaped);
 
-    if (empty($error_message)) {
-        $success_message = insertComment($pdo, $escaped);
-        if ($success_message === "コメントを書き込みました。") {
-            header("Location: ./index.php");
-            exit();
-        } else {
-            $error_message[] = $success_message;
+        if (empty($error_message)) {
+            $success_message = insertComment($pdo, $escaped);
+            if ($success_message === "コメントを書き込みました。") {
+                header("Location: ./index.php");
+                exit();
+            } else {
+                $error_message[] = $success_message;
+            }
         }
     }
 }
@@ -163,7 +170,13 @@ $pdo = null;
 </head>
 
 <body>
-    <h1 class="title">Z</h1>
+    <div class="header__flex">
+    <h1>Z</h1>
+    <nav>
+        <a href="top.php">ログイン</a>
+        <a href="logout.php">ログアウト</a>
+    </nav>
+  </div>
     <hr>
     <div class="boardWrapper">
         <!-- 成功メッセージ -->
@@ -198,16 +211,21 @@ $pdo = null;
                     <hr>
                 <?php endforeach; ?>
             <?php endif; ?>
-            <form method="POST" action="" class="formWrapper">
-                <div>
-                    <input type="submit" value="書き込む" name="submitButton">
-                    <label>名前：</label>
-                    <input type="text" name="username">
-                </div>
-                <div>
-                    <textarea name="comment" class="commentTextArea"></textarea>
-                </div>
-            </form>
+
+            <?php if (isset($_SESSION['id'])) : ?>
+                <form method="POST" action="" class="formWrapper">
+                    <div>
+                        <input type="submit" value="書き込む" name="submitButton">
+                        <label>名前：</label>
+                        <input type="text" name="username">
+                    </div>
+                    <div>
+                        <textarea name="comment" class="commentTextArea"></textarea>
+                    </div>
+                </form>
+            <?php else : ?>
+            <p>ログインしていないため、フィードを投稿できません。</p>
+            <?php endif; ?>
         </section>
     </div>
     <script src="scripts.js"></script>
