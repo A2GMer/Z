@@ -19,7 +19,7 @@ function handlePost($pdo, $id) {
     $escaped = [];
 
     if (empty($_POST["username"])) {
-        $error_messages[] = "お名前を入力してください。";
+        $escaped['username'] = "名無しさん";
     } else {
         $escaped['username'] = sanitizeInput($_POST["username"]);
     }
