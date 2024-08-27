@@ -202,7 +202,17 @@ $pdo = null;
                                     <p class="username"><?php echo htmlspecialchars($value['username'], ENT_QUOTES, 'UTF-8'); ?></p>
                                     <time>：<?php echo date('Y/m/d H:i', strtotime($value['post_date'])); ?></time>
                                 </div>
-                                <p class="comment"><?php echo htmlspecialchars($value['comment'], ENT_QUOTES, 'UTF-8'); ?></p>
+                                <p class="comment">
+                                    <?php 
+                                        $limit = 200;
+                                        $str = htmlspecialchars($value['comment'], ENT_QUOTES, 'UTF-8');
+                                        
+                                        if (mb_strlen($str) >= $limit) {
+                                            $str = mb_substr($str, 0, $limit) . '…';
+                                        }
+                                        echo $str;
+                                    ?>
+                                </p>
                             </div>
                         </a>
                         <button class="votesButton" id="ajaxButton" data-id="<?php echo $value['id'] ?>">👍</button><span id="upVotesCounts?<?php echo $value['id'] ?>"><?php echo $value['upvote'] ?></span>
