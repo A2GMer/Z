@@ -83,6 +83,30 @@ $feed_message = fetchMessages($pdo, $id, 'z-feeds', 'id');
 $comments = fetchMessages($pdo, $id, 'z-comments', 'feed_id');
 
 $pdo = null;
+
+
+function getId(){
+    // クライアントのIPアドレスを取得
+    $ipAddress = $_SERVER['REMOTE_ADDR'];
+
+    // クライアントのホスト名を取得
+    $hostName = gethostbyaddr($ipAddress);
+
+    // 現在の日付を yyyymmdd 形式で取得
+    $date = date('Ymd');
+
+    // IPアドレス、ホスト名、日にちを連結して文字列を作成
+    $stringToHash = $ipAddress . $hostName . $date;
+
+    // ハッシュを生成（SHA-256を使用）
+    $hash = hash('sha256', $stringToHash);
+
+    // ハッシュ値の末尾6桁を取得
+    $last6Chars = substr($hash, -6);
+
+    return $last6Chars;
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -142,6 +166,7 @@ $pdo = null;
                 <input type="submit" value="書き込む" name="submitButton">
                 <label>名前：</label>
                 <input type="text" name="username">
+                <!-- <label>ID：<?php echo getId(); ?></label> -->
             </div>
             <div>
                 <textarea name="comment" class="commentTextArea"></textarea>
