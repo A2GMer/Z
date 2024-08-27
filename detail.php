@@ -30,12 +30,19 @@ function handlePost($pdo, $id) {
         $escaped['comment'] = sanitizeInput($_POST["comment"]);
     }
 
+    if (empty($_POST["commenterId"])) {
+        $error_messages[] = "IDが取得できなかった。";
+    } else {
+        $escaped['commenterId'] = sanitizeInput($_POST["commenterId"]);
+    }
+
     if (empty($error_messages)) {
         $current_date = date("Y-m-d H:i:s");
 
         $pdo->beginTransaction();
         try {
-            $statement = $pdo->prepare("INSERT INTO `z-comments` (username, comment, post_date, feed_id) VALUES (:username, :comment, :current_date, :feed_id)");
+            $statement = $pdo->prepare("INSERT INTO `z-comments` (commenterId, username, comment, post_date, feed_id) VALUES (:commenterId, :username, :comment, :current_date, :feed_id)");
+            $statement->bindParam(':commenterId', $escaped["commenterId"], PDO::PARAM_STR);
             $statement->bindParam(':username', $escaped["username"], PDO::PARAM_STR);
             $statement->bindParam(':comment', $escaped["comment"], PDO::PARAM_STR);
             $statement->bindParam(':current_date', $current_date, PDO::PARAM_STR);
@@ -60,7 +67,7 @@ function handlePost($pdo, $id) {
 }
 
 function fetchMessages($pdo, $id, $table, $column) {
-    $statement = $pdo->prepare("SELECT username, comment, post_date FROM `$table` WHERE $column = :id");
+    $statement = $pdo->prepare("SELECT * FROM `$table` WHERE $column = :id");
     $statement->bindParam(':id', $id, PDO::PARAM_STR);
     $statement->execute();
     return $statement->fetchAll(PDO::FETCH_ASSOC);
@@ -104,6 +111,7 @@ function getId(){
     // ハッシュ値の末尾6桁を取得
     $last6Chars = substr($hash, -6);
 
+    // return $stringToHash;
     return $last6Chars;
 }
 
@@ -131,6 +139,8 @@ function getId(){
                                 <span>名前：</span>
                                 <p class="username"><?php echo $value['username']; ?></p>
                                 <time>：<?php echo date('Y/m/d H:i', strtotime($value['post_date'])); ?></time>
+                                <span>：ID：</span>
+                                <p><?php echo $value['commenterId']; ?></p>
                             </div>
                             <p class="comment"><?php echo $value['comment']; ?></p>
                         </div>
@@ -148,6 +158,8 @@ function getId(){
                                 <span>名前：</span>
                                 <p class="username"><?php echo $value['username']; ?></p>
                                 <time>：<?php echo date('Y/m/d H:i', strtotime($value['post_date'])); ?></time>
+                                <span>：ID：</span>
+                                <p><?php echo $value['commenterId']; ?></p>
                             </div>
                             <p class="comment"><?php echo $value['comment']; ?></p>
                         </div>
@@ -166,7 +178,8 @@ function getId(){
                 <input type="submit" value="書き込む" name="submitButton">
                 <label>名前：</label>
                 <input type="text" name="username">
-                <!-- <label>ID：<?php echo getId(); ?></label> -->
+                <label>ID：<?php echo getId(); ?></label>
+                <input type="hidden" name="commenterId" value=<?php echo getId(); ?> />
             </div>
             <div>
                 <textarea name="comment" class="commentTextArea"></textarea>
