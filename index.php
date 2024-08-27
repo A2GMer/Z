@@ -215,8 +215,10 @@ $pdo = null;
                                 </p>
                             </div>
                         </a>
-                        <button class="votesButton" id="ajaxButton" data-id="<?php echo $value['id'] ?>">👍</button><span id="upVotesCounts?<?php echo $value['id'] ?>"><?php echo $value['upvote'] ?></span>
-                        <button >👎</button>
+                        <?php if (isset($_SESSION['id'])) : ?>
+                            <button class="votesButton" id="ajaxButton" data-id="<?php echo $value['id'] ?>">👍</button><span id="upVotesCounts?<?php echo $value['id'] ?>"><?php echo $value['upvote'] ?></span>
+                            <button >👎</button>
+                        <?php endif; ?>
                     </article>
                     <hr>
                 <?php endforeach; ?>

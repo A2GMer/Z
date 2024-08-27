@@ -84,7 +84,7 @@ $comments = fetchMessages($pdo, $id, 'z-comments', 'feed_id');
 
 $pdo = null;
 
-
+// IDを付与(IP/ホスト名/日付をハッシュ化した末尾6文字)
 function getId(){
     // クライアントのIPアドレスを取得
     $ipAddress = $_SERVER['REMOTE_ADDR'];
