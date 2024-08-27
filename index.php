@@ -39,9 +39,10 @@ function insertComment($pdo, $escaped) {
     
     try {
         $statement = $pdo->prepare(
-            "INSERT INTO `z-feeds` (username, comment, post_date) VALUES (:username, :comment, :current_date)"
+            "INSERT INTO `z-feeds` (username, title, comment, post_date) VALUES (:username, :title, :comment, :current_date)"
         );
         $statement->bindParam(':username', $escaped["username"], PDO::PARAM_STR);
+        $statement->bindParam(':title', $escaped["title"], PDO::PARAM_STR);
         $statement->bindParam(':comment', $escaped["comment"], PDO::PARAM_STR);
         $statement->bindParam(':current_date', $current_date, PDO::PARAM_STR);
 
@@ -113,6 +114,7 @@ if (isset($_POST["submitButton"])) {
         $error_message[] = "ログインしてください。";
     } else {
         validateInput("username", $escaped);
+        validateInput("title", $escaped);
         validateInput("comment", $escaped);
 
         if (empty($error_message)) {
@@ -202,6 +204,9 @@ $pdo = null;
                                     <p class="username"><?php echo htmlspecialchars($value['username'], ENT_QUOTES, 'UTF-8'); ?></p>
                                     <time>：<?php echo date('Y/m/d H:i', strtotime($value['post_date'])); ?></time>
                                 </div>
+                                <div class="titleArea">
+                                    <?php echo htmlspecialchars($value['title'], ENT_QUOTES, 'UTF-8'); ?>
+                                </div>
                                 <p class="comment">
                                     <?php 
                                         $limit = 200;
@@ -232,6 +237,8 @@ $pdo = null;
                         <input type="text" name="username">
                     </div>
                     <div>
+                        <label>タイトル：</label>
+                        <textarea name="title" class="titleTextArea"></textarea>
                         <textarea name="comment" class="commentTextArea"></textarea>
                     </div>
                 </form>

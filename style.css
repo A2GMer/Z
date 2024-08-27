@@ -25,15 +25,27 @@ section .username {
   font-weight: 700;
 }
 
+section .titleArea {
+  display: flex;
+  align-items: center;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  font-weight: bold;
+  font-size: 20px;
+}
+
 section .nameArea {
   display: flex;
   align-items: center;
   margin-bottom: -14px;
+  font-size: 10px;
 }
 
 section .comment {
   margin-top: 0;
-  margin-left: 20px;
+  font-size: 10px;
+  overflow-wrap: break-word;
+  /* margin-left: 20px; */
 }
 
 .success_message {
@@ -55,6 +67,11 @@ section .comment {
   margin-top: 10px;
   width: 80%;
   height: 90px;
+}
+
+.titleTextArea {
+  width: 80%;
+  height: 20px;
 }
 
 .non-hyperlink {
