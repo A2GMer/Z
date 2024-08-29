@@ -1,5 +1,4 @@
 <?php
-
 session_start();
 
 date_default_timezone_set("Asia/Tokyo");
@@ -234,7 +233,7 @@ $pdo = null;
                     <div>
                         <input type="submit" value="書き込む" name="submitButton">
                         <label>名前：</label>
-                        <input type="text" name="username">
+                        <input type="text" name="username" value="<?php echo $_SESSION['username']; ?>"  disabled="disabled">
                     </div>
                     <div>
                         <label>タイトル：</label>

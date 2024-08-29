@@ -28,7 +28,9 @@ if (!isset($row['email'])) {
 //パスワード確認後sessionにメールアドレスを渡す
 if (password_verify($_POST['password'], $row['password'])) {
   session_regenerate_id(true); //session_idを新しく生成し、置き換える
+  session_start();
   $_SESSION['id'] = $row['id'];
+  $_SESSION['username'] = $row['username'];
 ?>
 <script type="text/javascript">
   window.location.href = 'index.php';

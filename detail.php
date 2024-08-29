@@ -1,4 +1,6 @@
 <?php
+session_start();
+
 date_default_timezone_set("Asia/Tokyo");
 require_once('config.php');
 
@@ -19,7 +21,12 @@ function handlePost($pdo, $id) {
     $escaped = [];
 
     if (empty($_POST["username"])) {
-        $escaped['username'] = "名無しさん";
+        if (isset($_SESSION['id'])) {
+            // ログインしていれば、ユーザ名
+            $escaped['username'] = $_SESSION['username'];
+        } else {
+            $escaped['username'] = "名無しさん";
+        }
     } else {
         $escaped['username'] = sanitizeInput($_POST["username"]);
     }
@@ -41,7 +48,11 @@ function handlePost($pdo, $id) {
 
         $pdo->beginTransaction();
         try {
-            $statement = $pdo->prepare("INSERT INTO `z-comments` (commenterId, username, comment, post_date, feed_id) VALUES (:commenterId, :username, :comment, :current_date, :feed_id)");
+            if (isset($_SESSION['id'])) {
+                $statement = $pdo->prepare("INSERT INTO `z-comments` (commenterId, username, comment, post_date, feed_id, isLogin) VALUES (:commenterId, :username, :comment, :current_date, :feed_id, 1)");
+            }else{
+                $statement = $pdo->prepare("INSERT INTO `z-comments` (commenterId, username, comment, post_date, feed_id, isLogin) VALUES (:commenterId, :username, :comment, :current_date, :feed_id, 0)");
+            }
             $statement->bindParam(':commenterId', $escaped["commenterId"], PDO::PARAM_STR);
             $statement->bindParam(':username', $escaped["username"], PDO::PARAM_STR);
             $statement->bindParam(':comment', $escaped["comment"], PDO::PARAM_STR);
@@ -177,7 +188,11 @@ function getId(){
                 <?php endif; ?>
                 <input type="submit" value="書き込む" name="submitButton">
                 <label>名前：</label>
+                <?php if (isset($_SESSION['id'])) : ?>
+                <input type="text" name="username" value="<?php echo $_SESSION['username']; ?>" disabled="disabled">
+                <?php else: ?>
                 <input type="text" name="username">
+                <?php endif; ?>
                 <label>ID：<?php echo getId(); ?></label>
                 <input type="hidden" name="commenterId" value=<?php echo getId(); ?> />
             </div>

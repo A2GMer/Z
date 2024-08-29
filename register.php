@@ -6,6 +6,7 @@ try {
   $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
   $pdo->exec("create table if not exists `z-userdata`(
       `id` int not null auto_increment primary key,
+      `username` varchar(20),
       `email` varchar(255),
       `password` varchar(255),
       created timestamp not null default (current_timestamp))");
@@ -13,6 +14,8 @@ try {
 } catch (Exception $e) {
   echo $e->getMessage() . PHP_EOL;
 }
+
+$username = $_POST["username"];
 
 //メールアドレスのバリデーション
 if (!$email = filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
@@ -34,7 +37,8 @@ $stmt->execute();
 $row = $stmt->fetch(PDO::FETCH_ASSOC);
 //データベース内のメールアドレスと重複していない場合、登録する。
 if (!isset($row['email'])) {
-  $stmt = $pdo->prepare("insert into `z-userdata`(email, password) value(:email, :password)");
+  $stmt = $pdo->prepare("insert into `z-userdata`(username, email, password) value(:username, :email, :password)");
+  $stmt->bindParam(':username', $username, PDO::PARAM_STR);
   $stmt->bindParam(':email', $email, PDO::PARAM_STR);
   $stmt->bindParam(':password', $password, PDO::PARAM_STR);
   $stmt->execute();  
