@@ -144,16 +144,17 @@ function getId(){
         <section>
             <?php if (!empty($feed_message)) : ?>
                 <?php foreach ($feed_message as $value) : ?>
-                    <article>
+                    <article class="commentsButton" data-id="<?php echo $value['id'] ?>">
                         <div class="wrapper">
                             <div class="nameArea">
                                 <span>名前：</span>
                                 <p class="username"><?php echo $value['username']; ?></p>
                                 <time>：<?php echo date('Y/m/d H:i', strtotime($value['post_date'])); ?></time>
-                                <span>：ID：</span>
-                                <p><?php echo $value['commenterId']; ?></p>
                             </div>
-                            <p class="comment"><?php echo $value['comment']; ?></p>
+                            <div class="titleArea">
+                                <?php echo htmlspecialchars($value['title'], ENT_QUOTES, 'UTF-8'); ?>
+                            </div>
+                            <p class="comment" id="comment"><?php echo $value['comment']; ?></p>
                         </div>
                     </article>
                     <hr>
@@ -189,7 +190,7 @@ function getId(){
                 <input type="submit" value="書き込む" name="submitButton">
                 <label>名前：</label>
                 <?php if (isset($_SESSION['id'])) : ?>
-                <input type="text" name="username" value="<?php echo $_SESSION['username']; ?>" disabled="disabled">
+                <input type="text" name="username" value="<?php echo $_SESSION['username']; ?>" readonly>
                 <?php else: ?>
                 <input type="text" name="username">
                 <?php endif; ?>
@@ -201,6 +202,7 @@ function getId(){
             </div>
         </form>
     </div>
+    <script src="scripts-detail.js"></script>
 </body>
 
 </html>

@@ -233,7 +233,7 @@ $pdo = null;
                     <div>
                         <input type="submit" value="書き込む" name="submitButton">
                         <label>名前：</label>
-                        <input type="text" name="username" value="<?php echo $_SESSION['username']; ?>"  disabled="disabled">
+                        <input type="text" name="username" value="<?php echo $_SESSION['username']; ?>" readonly>
                     </div>
                     <div>
                         <label>タイトル：</label>
